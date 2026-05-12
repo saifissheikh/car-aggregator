@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { formatQAR, formatKM, formatRelative } from "@/lib/utils";
 import { SortControl } from "./components/SortControl";
 import { SORT_OPTIONS, type SortValue } from "./components/sort-options";
+import { MakeFilter } from "./components/MakeFilter";
 import { Pagination } from "./components/Pagination";
 import { CardCarousel } from "./components/CardCarousel";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -33,21 +34,37 @@ function isSortValue(v: string | undefined): v is SortValue {
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; sort?: string }>;
+  searchParams: Promise<{ page?: string; sort?: string; make?: string }>;
 }) {
   const sp = await searchParams;
   const sort: SortValue = isSortValue(sp.sort) ? sp.sort : "newest";
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
+  const make = sp.make?.trim() || null;
 
-  const [total, listings] = await Promise.all([
-    prisma.listing.count({ where: { isActive: true } }),
+  const where: Prisma.ListingWhereInput = {
+    isActive: true,
+    ...(make ? { make: { equals: make, mode: "insensitive" } } : {}),
+  };
+
+  const [total, listings, makeRows] = await Promise.all([
+    prisma.listing.count({ where }),
     prisma.listing.findMany({
-      where: { isActive: true },
+      where,
       orderBy: SORT_TO_ORDER[sort],
       skip: (page - 1) * PER_PAGE,
       take: PER_PAGE,
     }),
+    prisma.listing.findMany({
+      where: { isActive: true, make: { not: null } },
+      distinct: ["make"],
+      select: { make: true },
+      orderBy: { make: "asc" },
+    }),
   ]);
+
+  const makes = makeRows
+    .map((r) => r.make)
+    .filter((m): m is string => !!m && m.trim().length > 0);
 
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
   const safePage = Math.min(page, totalPages);
@@ -55,6 +72,7 @@ export default async function HomePage({
   const buildHref = (p: number) => {
     const q = new URLSearchParams();
     if (sort !== "newest") q.set("sort", sort);
+    if (make) q.set("make", make);
     if (p !== 1) q.set("page", String(p));
     const s = q.toString();
     return s ? `/?${s}` : "/";
@@ -93,7 +111,10 @@ export default async function HomePage({
               </span>
               <span className="text-ink-muted">of {total}</span>
             </p>
-            <SortControl value={sort} />
+            <div className="flex items-center gap-2">
+              <MakeFilter value={make} makes={makes} />
+              <SortControl value={sort} />
+            </div>
           </div>
         </div>
 
