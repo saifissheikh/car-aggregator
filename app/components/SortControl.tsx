@@ -15,7 +15,8 @@ export function SortControl({ value }: { value: SortValue }) {
   const pathname = usePathname();
   const params = useSearchParams();
 
-  function onChange(next: string) {
+  function onChange(next: string | null) {
+    if (!next) return;
     const sp = new URLSearchParams(params.toString());
     sp.set("sort", next);
     sp.set("page", "1");
