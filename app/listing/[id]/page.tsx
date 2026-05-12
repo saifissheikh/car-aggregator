@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -23,6 +22,8 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { formatQAR, formatKM, formatRelative } from "@/lib/utils";
+import { GalleryDialog } from "@/app/components/GalleryDialog";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +72,7 @@ export default async function ListingDetail({
   return (
     <main className="min-h-screen">
       <div className="sticky top-0 z-20 bg-bone/85 backdrop-blur-md border-b border-ink/10">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12 py-3 flex items-center justify-between">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12 py-3 flex items-center justify-between gap-3">
           <Link
             href="/"
             className="flex items-center gap-2 text-sm hover:opacity-70 transition"
@@ -79,99 +80,43 @@ export default async function ListingDetail({
             <ArrowLeft size={16} />
             <span className="font-mono text-xs uppercase tracking-wider">Back to feed</span>
           </Link>
-          <a
-            href={listing.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-ink-muted hover:text-ink transition"
-          >
-            View source
-            <ExternalLink size={12} />
-          </a>
+          <div className="flex items-center gap-3">
+            <a
+              href={listing.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-ink-muted hover:text-ink transition"
+            >
+              View source
+              <ExternalLink size={12} />
+            </a>
+            <ModeToggle />
+          </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl md:px-8 lg:px-12 md:py-10 md:grid md:grid-cols-[1.4fr_1fr] xl:grid-cols-[1.55fr_1fr] md:gap-10 lg:gap-14">
-        {/* Image gallery */}
-        {images.length > 0 ? (
-          <div className="md:space-y-4">
-            {/* Mobile: horizontal snap-x carousel */}
-            <div className="md:hidden flex overflow-x-auto snap-x snap-mandatory bg-sand no-scrollbar">
-              {images.map((src, i) => (
-                <div
-                  key={i}
-                  className="relative shrink-0 w-full aspect-[4/3] snap-center"
-                >
-                  <Image
-                    src={src}
-                    alt={`${listing.make ?? ""} ${listing.model ?? ""} — ${i + 1}`}
-                    fill
-                    sizes="100vw"
-                    className="object-cover"
-                    unoptimized
-                    priority={i === 0}
-                  />
-                  <span className="absolute bottom-3 right-3 chip bg-ink/70 text-bone border-transparent">
-                    {i + 1} / {images.length}
+        {/* Image gallery (mobile snap + desktop hero+grid, fullscreen zoom on tap) */}
+        {images.length > 0 && (
+          <GalleryDialog
+            images={images}
+            alt={`${listing.make ?? ""} ${listing.model ?? ""}`.trim() || "Car"}
+            badges={
+              <div className="absolute top-4 left-4 flex flex-col gap-1.5 items-start z-10">
+                {isFresh && (
+                  <span className="chip bg-brand/95 text-bone border-transparent">
+                    <Sparkles size={10} /> Just added
                   </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Desktop: hero + grid */}
-            <div className="hidden md:block">
-              <div className="relative w-full aspect-[16/10] bg-sand rounded-2xl overflow-hidden shadow-soft">
-                <Image
-                  src={images[0]}
-                  alt={`${listing.make ?? ""} ${listing.model ?? ""}`}
-                  fill
-                  sizes="(max-width: 1280px) 60vw, 800px"
-                  className="object-cover"
-                  unoptimized
-                  priority
-                />
-                <div className="absolute top-4 left-4 flex flex-col gap-1.5 items-start">
-                  {isFresh && (
-                    <span className="chip bg-brand/95 text-bone border-transparent">
-                      <Sparkles size={10} /> Just added
-                    </span>
-                  )}
-                  {listing.isBrandNew && (
-                    <span className="chip bg-ink text-bone border-transparent">
-                      Brand new
-                    </span>
-                  )}
-                </div>
+                )}
+                {listing.isBrandNew && (
+                  <span className="chip bg-ink text-bone border-transparent">
+                    Brand new
+                  </span>
+                )}
               </div>
-              {images.length > 1 && (
-                <div className="mt-4 grid grid-cols-3 gap-3">
-                  {images.slice(1, 7).map((src, i) => (
-                    <div
-                      key={i}
-                      className="relative aspect-[4/3] bg-sand rounded-xl overflow-hidden shadow-soft"
-                    >
-                      <Image
-                        src={src}
-                        alt={`Photo ${i + 2}`}
-                        fill
-                        sizes="(max-width: 1280px) 20vw, 260px"
-                        className="object-cover"
-                        unoptimized
-                      />
-                      {i === 5 && images.length > 7 && (
-                        <div className="absolute inset-0 bg-ink/60 flex items-center justify-center">
-                          <span className="font-display text-bone text-2xl">
-                            +{images.length - 7}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        ) : null}
+            }
+          />
+        )}
 
         {/* Info column */}
         <div className="md:self-start">

@@ -4,20 +4,71 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme {
+/* Editorial palette — light values live on :root, dark variants on .dark.
+   Tailwind tokens (--color-ink etc.) reference these via @theme inline below
+   so utilities like `bg-bone` / `text-ink` swap automatically with the mode. */
+@layer base {
+  :root {
+    color-scheme: light;
+    --ink: #0a0a0a;
+    --bone: #f5f1eb;
+    --sand: #e8e1d4;
+    --paper: #fffdf8;
+    --brand: #c8553d;
+    --brand-soft: #e4a89b;
+    --olive: #5a6b46;
+    --ink-muted: #6b6357;
+    --ink-muted-2: #9c9385;
+
+    --grad-1: 200 85 61;
+    --grad-2: 90 107 70;
+    --grad-1-alpha: 0.06;
+    --grad-2-alpha: 0.05;
+
+    --selection-bg: var(--ink);
+    --selection-fg: var(--bone);
+    --chip-border: rgba(10, 10, 10, 0.08);
+    --chip-bg: rgba(255, 253, 248, 0.7);
+  }
+
+  .dark {
+    color-scheme: dark;
+    --ink: #f5f1eb;
+    --bone: #14110d;
+    --sand: #211c17;
+    --paper: #1c1814;
+    --brand: #e57a62;
+    --brand-soft: #c87560;
+    --olive: #8aa067;
+    --ink-muted: #a39988;
+    --ink-muted-2: #6e6558;
+
+    --grad-1: 229 122 98;
+    --grad-2: 138 160 103;
+    --grad-1-alpha: 0.08;
+    --grad-2-alpha: 0.06;
+
+    --selection-bg: var(--brand);
+    --selection-fg: var(--bone);
+    --chip-border: rgba(245, 241, 235, 0.12);
+    --chip-bg: rgba(245, 241, 235, 0.06);
+  }
+}
+
+@theme inline {
   --font-display: var(--font-display), serif;
   --font-body: var(--font-body), sans-serif;
   --font-mono: var(--font-mono), monospace;
 
-  --color-ink: #0a0a0a;
-  --color-bone: #f5f1eb;
-  --color-sand: #e8e1d4;
-  --color-paper: #fffdf8;
-  --color-brand: #c8553d;
-  --color-brand-soft: #e4a89b;
-  --color-olive: #5a6b46;
-  --color-ink-muted: #6b6357;
-  --color-ink-muted-2: #9c9385;
+  --color-ink: var(--ink);
+  --color-bone: var(--bone);
+  --color-sand: var(--sand);
+  --color-paper: var(--paper);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-olive: var(--olive);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-muted-2: var(--ink-muted-2);
 
   --shadow-soft:
     0 1px 2px rgba(10, 10, 10, 0.04), 0 8px 24px -12px rgba(10, 10, 10, 0.1);
@@ -76,11 +127,6 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-*/
 @layer base {
   *,
   ::after,
@@ -91,7 +137,6 @@
   }
 
   :root {
-    color-scheme: light;
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -167,16 +212,18 @@
   body {
     font-family: var(--font-body);
     font-feature-settings: "ss01", "cv11";
-    background-color: #f5f1eb;
+    background-color: var(--bone);
+    color: var(--ink);
     background-image:
-      radial-gradient(at 10% 0%, rgba(200, 85, 61, 0.06) 0%, transparent 50%),
-      radial-gradient(at 90% 10%, rgba(90, 107, 70, 0.05) 0%, transparent 45%);
+      radial-gradient(at 10% 0%, rgba(var(--grad-1), var(--grad-1-alpha)) 0%, transparent 50%),
+      radial-gradient(at 90% 10%, rgba(var(--grad-2), var(--grad-2-alpha)) 0%, transparent 45%);
     background-attachment: fixed;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   ::selection {
-    background-color: #0a0a0a;
-    color: #f5f1eb;
+    background-color: var(--selection-bg);
+    color: var(--selection-fg);
   }
 
   /* Hide scrollbars on horizontal image strips, keep them on the page */
@@ -194,7 +241,7 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: #6b6357;
+  color: var(--ink-muted);
 }
 
 @utility chip {
@@ -207,8 +254,8 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  border: 1px solid rgba(10, 10, 10, 0.08);
-  background: rgba(255, 253, 248, 0.7);
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
   backdrop-filter: blur(8px);
 }
 
@@ -223,4 +270,9 @@
     mix-blend-mode: multiply;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
+}
+
+.dark .grain::after {
+  opacity: 0.06;
+  mix-blend-mode: screen;
 }

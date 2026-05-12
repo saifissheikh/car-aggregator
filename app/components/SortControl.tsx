@@ -1,7 +1,13 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SORT_OPTIONS, type SortValue } from "./sort-options";
 
 export function SortControl({ value }: { value: SortValue }) {
@@ -17,25 +23,31 @@ export function SortControl({ value }: { value: SortValue }) {
   }
 
   return (
-    <label className="relative inline-flex items-center gap-2">
-      <span className="label">Sort</span>
-      <span className="relative inline-block">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="appearance-none bg-paper/90 border border-ink/10 rounded-full pl-4 pr-9 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ink/20 hover:border-ink/30 transition cursor-pointer"
+    <div className="inline-flex items-center gap-2">
+      <span className="label hidden sm:inline">Sort</span>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger
+          aria-label="Sort listings"
+          className="h-9 min-w-[160px] rounded-full bg-paper/90 border-ink/10 px-4 text-sm font-medium text-ink hover:border-ink/30 focus:ring-2 focus:ring-ink/20 focus:ring-offset-0 [&_svg]:text-ink-muted"
+        >
+          <SelectValue placeholder="Sort" />
+        </SelectTrigger>
+        <SelectContent
+          align="end"
+          sideOffset={6}
+          className="rounded-2xl border-ink/10 bg-paper/95 backdrop-blur shadow-lift min-w-[220px]"
         >
           {SORT_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
+            <SelectItem
+              key={o.value}
+              value={o.value}
+              className="rounded-lg text-sm py-2.5 focus:bg-bone focus:text-ink data-[state=checked]:text-brand data-[state=checked]:font-medium"
+            >
               {o.label}
-            </option>
+            </SelectItem>
           ))}
-        </select>
-        <ChevronDown
-          size={14}
-          className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink-muted"
-        />
-      </span>
-    </label>
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

@@ -1,11 +1,12 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Sparkles, MapPin, Gauge, Fuel, Calendar } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { formatQAR, formatKM, formatRelative } from "@/lib/utils";
 import { SortControl } from "./components/SortControl";
 import { SORT_OPTIONS, type SortValue } from "./components/sort-options";
 import { Pagination } from "./components/Pagination";
+import { CardCarousel } from "./components/CardCarousel";
+import { ModeToggle } from "@/components/mode-toggle";
 import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -70,14 +71,16 @@ export default async function HomePage({
                 Motor <span className="italic text-brand">Diary</span>
               </h1>
             </div>
-            <div className="text-right">
-              <p className="font-display text-2xl sm:text-3xl leading-none">{total}</p>
-              <p className="label mt-1">Listings tracked</p>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="font-display text-2xl sm:text-3xl leading-none">{total}</p>
+                <p className="label mt-1">Listings tracked</p>
+              </div>
+              <ModeToggle />
             </div>
           </div>
           <p className="text-sm sm:text-base text-ink-muted mt-4 max-w-lg leading-relaxed">
-            A quiet, mobile-first feed of recently listed cars across Qatar Living
-            <span className="text-ink-muted-2"> — Qatar Sale coming soon</span>.
+            A quiet, mobile-first feed of recently listed cars across Qatar Living and Qatar Sale.
           </p>
         </header>
 
@@ -124,7 +127,6 @@ function ListingCard({
   index: number;
 }) {
   const images = (l.images as string[]) ?? [];
-  const cover = images[0];
   const isFresh =
     Date.now() - new Date(l.firstSeenAt).getTime() < 24 * 60 * 60 * 1000;
   const features = (l.features as string[]) ?? [];
@@ -136,46 +138,59 @@ function ListingCard({
       style={{ animationDelay: `${Math.min(index * 40, 240)}ms` }}
     >
       <article className="bg-paper rounded-2xl overflow-hidden border border-ink/5 shadow-soft md:hover:shadow-lift md:hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
-        <div className="relative aspect-[4/3] bg-sand overflow-hidden">
-          {cover ? (
-            <Image
-              src={cover}
-              alt={`${l.make ?? ""} ${l.model ?? ""}`.trim() || "Car"}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-              className="object-cover md:group-hover:scale-105 transition-transform duration-700"
-              unoptimized
-            />
-          ) : (
+        {images.length > 0 ? (
+          <CardCarousel
+            images={images}
+            alt={`${l.make ?? ""} ${l.model ?? ""}`.trim() || "Car"}
+            priority={index < 4}
+            overlay={
+              <>
+                <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start z-10">
+                  {isFresh && (
+                    <span className="chip bg-brand/95 text-bone border-transparent">
+                      <Sparkles size={10} /> Just added
+                    </span>
+                  )}
+                  {l.isBrandNew && (
+                    <span className="chip bg-ink text-bone border-transparent">New</span>
+                  )}
+                </div>
+                <span className="absolute top-3 right-3 chip z-10">
+                  {l.source === "qatarliving" ? "QL" : "QS"}
+                </span>
+                <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-ink/80 via-ink/30 to-transparent pointer-events-none">
+                  <p className="font-display text-xl text-bone tracking-tight drop-shadow">
+                    {formatQAR(l.priceQAR)}
+                  </p>
+                </div>
+              </>
+            }
+          />
+        ) : (
+          <div className="relative aspect-[4/3] bg-sand overflow-hidden">
             <div className="absolute inset-0 flex items-center justify-center text-ink-muted-2 text-xs uppercase tracking-wider font-mono">
               No image
             </div>
-          )}
-
-          {/* Top-left badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
-            {isFresh && (
-              <span className="chip bg-brand/95 text-bone border-transparent">
-                <Sparkles size={10} /> Just added
-              </span>
-            )}
-            {l.isBrandNew && (
-              <span className="chip bg-ink text-bone border-transparent">New</span>
-            )}
+            <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start z-10">
+              {isFresh && (
+                <span className="chip bg-brand/95 text-bone border-transparent">
+                  <Sparkles size={10} /> Just added
+                </span>
+              )}
+              {l.isBrandNew && (
+                <span className="chip bg-ink text-bone border-transparent">New</span>
+              )}
+            </div>
+            <span className="absolute top-3 right-3 chip z-10">
+              {l.source === "qatarliving" ? "QL" : "QS"}
+            </span>
+            <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-ink/80 via-ink/30 to-transparent">
+              <p className="font-display text-xl text-bone tracking-tight drop-shadow">
+                {formatQAR(l.priceQAR)}
+              </p>
+            </div>
           </div>
-
-          {/* Top-right source */}
-          <span className="absolute top-3 right-3 chip">
-            {l.source === "qatarliving" ? "QL" : "QS"}
-          </span>
-
-          {/* Bottom-left price overlay */}
-          <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-ink/70 via-ink/30 to-transparent">
-            <p className="font-display text-xl text-bone tracking-tight drop-shadow">
-              {formatQAR(l.priceQAR)}
-            </p>
-          </div>
-        </div>
+        )}
 
         <div className="p-4 sm:p-5 flex-1 flex flex-col">
           <div className="flex items-baseline justify-between gap-2 min-w-0">
