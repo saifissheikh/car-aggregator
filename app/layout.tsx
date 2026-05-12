@@ -23,7 +23,7 @@ const mono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Motor Diary — Qatar Car Listings",
+  title: "Qatar Cars — Listings Aggregator",
   description: "Recently added cars across Qatar Living and Qatar Sale.",
 };
 

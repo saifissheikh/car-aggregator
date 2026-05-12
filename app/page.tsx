@@ -86,7 +86,7 @@ export default async function HomePage({
             <div>
               <p className="label">Doha — Live feed</p>
               <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-medium tracking-tight mt-1">
-                Motor <span className="italic text-brand">Diary</span>
+                Qatar <span className="italic text-brand">Cars</span>
               </h1>
             </div>
             <div className="flex items-center gap-4">
