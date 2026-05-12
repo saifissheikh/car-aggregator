@@ -22,7 +22,7 @@ export function MakeFilter({
   const pathname = usePathname();
   const params = useSearchParams();
 
-  function onChange(next: string) {
+  function onChange(next: string | null) {
     const sp = new URLSearchParams(params.toString());
     if (!next || next === ALL) {
       sp.delete("make");
