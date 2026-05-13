@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { PendingPageChip, PendingArrowLink } from "./PendingLink";
 
 export function Pagination({
   page,
@@ -33,7 +33,11 @@ export function Pagination({
 
   return (
     <nav className="flex items-center justify-center gap-1.5 sm:gap-2 py-10">
-      <ArrowLink href={prev ? buildHref(prev) : null} dir="prev" />
+      {prev ? (
+        <PendingArrowLink href={buildHref(prev)} dir="prev" />
+      ) : (
+        <DisabledArrow dir="prev" />
+      )}
 
       <div className="flex items-center gap-1">
         {pages.map((p, i) =>
@@ -41,58 +45,35 @@ export function Pagination({
             <span key={`e-${i}`} className="px-1.5 text-ink-muted text-sm select-none">
               …
             </span>
+          ) : p === page ? (
+            <ActiveChip key={p} page={p} />
           ) : (
-            <PageChip key={p} page={p} active={p === page} href={buildHref(p)} />
+            <PendingPageChip key={p} page={p} href={buildHref(p)} />
           )
         )}
       </div>
 
-      <ArrowLink href={next ? buildHref(next) : null} dir="next" />
+      {next ? (
+        <PendingArrowLink href={buildHref(next)} dir="next" />
+      ) : (
+        <DisabledArrow dir="next" />
+      )}
     </nav>
   );
 }
 
-function PageChip({
-  page,
-  active,
-  href,
-}: {
-  page: number;
-  active: boolean;
-  href: string;
-}) {
-  const base =
-    "min-w-[44px] h-11 sm:min-w-[36px] sm:h-9 px-2 inline-flex items-center justify-center rounded-full text-sm font-mono transition";
-  if (active) {
-    return (
-      <span className={`${base} bg-ink text-bone`}>{page}</span>
-    );
-  }
-  return (
-    <Link href={href} className={`${base} text-ink hover:bg-ink/5 border border-transparent hover:border-ink/10`}>
-      {page}
-    </Link>
-  );
+const CHIP_BASE =
+  "min-w-[44px] h-11 sm:min-w-[36px] sm:h-9 px-2 inline-flex items-center justify-center rounded-full text-sm font-mono select-none";
+
+function ActiveChip({ page }: { page: number }) {
+  return <span className={`${CHIP_BASE} bg-ink text-bone`}>{page}</span>;
 }
 
-function ArrowLink({ href, dir }: { href: string | null; dir: "prev" | "next" }) {
+function DisabledArrow({ dir }: { dir: "prev" | "next" }) {
   const Icon = dir === "prev" ? ChevronLeft : ChevronRight;
-  const base =
-    "h-11 w-11 sm:h-9 sm:w-9 inline-flex items-center justify-center rounded-full border transition";
-  if (!href) {
-    return (
-      <span className={`${base} border-ink/5 text-ink-muted-2 cursor-not-allowed`}>
-        <Icon size={16} />
-      </span>
-    );
-  }
   return (
-    <Link
-      href={href}
-      className={`${base} border-ink/10 text-ink hover:bg-ink hover:text-bone`}
-      aria-label={dir === "prev" ? "Previous page" : "Next page"}
-    >
+    <span className="h-11 w-11 sm:h-9 sm:w-9 inline-flex items-center justify-center rounded-full border border-ink/5 text-ink-muted-2 cursor-not-allowed select-none">
       <Icon size={16} />
-    </Link>
+    </span>
   );
 }

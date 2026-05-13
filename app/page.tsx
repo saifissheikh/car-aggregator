@@ -7,6 +7,7 @@ import { SortControl } from "./components/SortControl";
 import { SearchInput } from "./components/SearchInput";
 import { ListingsSection } from "./components/ListingsSection";
 import { ListingsSkeleton } from "./components/ListingsSkeleton";
+import { BackToTopButton } from "./components/BackToTopButton";
 import { ModeToggle } from "@/components/mode-toggle";
 import type { Prisma } from "@prisma/client";
 
@@ -161,6 +162,7 @@ export default async function HomePage({
           <p className="label">End of feed</p>
         </footer>
       </div>
+      <BackToTopButton />
     </main>
   );
 }
