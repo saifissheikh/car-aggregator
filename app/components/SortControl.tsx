@@ -24,14 +24,17 @@ export function SortControl({ value }: { value: SortValue }) {
   }
 
   return (
-    <div className="inline-flex items-center gap-2">
+    <div className="flex items-center gap-2 w-full sm:w-auto min-w-0">
       <span className="label hidden sm:inline">Sort</span>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger
           aria-label="Sort listings"
-          className="h-9 min-w-[160px] rounded-full bg-paper/90 border-ink/10 px-4 text-sm font-medium text-ink hover:border-ink/30 focus:ring-2 focus:ring-ink/20 focus:ring-offset-0 [&_svg]:text-ink-muted"
+          data-active={value !== "newest"}
+          className="h-11 sm:h-9 w-full sm:w-auto sm:min-w-[140px] min-w-0 rounded-full bg-paper/90 border border-ink/10 px-3.5 sm:px-4 text-sm font-medium text-ink hover:border-ink/30 focus:ring-2 focus:ring-ink/20 focus:ring-offset-0 [&_svg]:text-ink-muted [&>span]:truncate [&>span]:min-w-0 data-[active=true]:bg-brand data-[active=true]:text-white data-[active=true]:border-brand data-[active=true]:[&_svg]:text-white/80 data-[active=true]:shadow-soft"
         >
-          <SelectValue placeholder="Sort" />
+          <SelectValue placeholder="Sort">
+            {(v) => (v === "newest" ? "Sort" : SORT_OPTIONS.find((o) => o.value === v)?.label ?? "Sort")}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent
           align="end"

@@ -75,7 +75,7 @@ export default async function ListingDetail({
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12 py-3 flex items-center justify-between gap-3">
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm hover:opacity-70 transition"
+            className="inline-flex items-center gap-2 min-h-11 sm:min-h-0 -mx-2 px-2 sm:mx-0 sm:px-0 rounded-lg text-sm hover:opacity-70 transition"
           >
             <ArrowLeft size={16} />
             <span className="font-mono text-xs uppercase tracking-wider">Back to feed</span>
@@ -85,7 +85,7 @@ export default async function ListingDetail({
               href={listing.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-ink-muted hover:text-ink transition"
+              className="inline-flex items-center gap-1.5 min-h-11 sm:min-h-0 -mx-2 px-2 sm:mx-0 sm:px-0 rounded-lg text-xs font-mono uppercase tracking-wider text-ink-muted hover:text-ink transition"
             >
               View source
               <ExternalLink size={12} />
@@ -232,7 +232,10 @@ export default async function ListingDetail({
       </div>
 
       {/* Mobile sticky CTA */}
-      <div className="sticky bottom-0 md:hidden bg-bone/95 backdrop-blur border-t border-ink/10 px-5 py-4 z-10">
+      <div
+        className="sticky bottom-0 md:hidden bg-bone/95 backdrop-blur border-t border-ink/10 px-5 pt-4 z-10"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
+      >
         {contactButtons}
       </div>
     </main>

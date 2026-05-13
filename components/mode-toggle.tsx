@@ -17,7 +17,7 @@ export function ModeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-ink/10 bg-paper/60 backdrop-blur transition hover:bg-paper hover:border-ink/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+      className="relative inline-flex h-11 w-11 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-ink/10 bg-paper/60 backdrop-blur transition hover:bg-paper hover:border-ink/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
       suppressHydrationWarning
     >
       <Sun

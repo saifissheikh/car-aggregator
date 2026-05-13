@@ -61,11 +61,11 @@ export function CardCarousel({
         {images.length > 1 && (
           <>
             <CarouselPrevious
-              className="left-2 h-9 w-9 border-ink/10 bg-paper/85 text-ink shadow-soft hover:bg-paper [&_svg]:size-5 md:opacity-0 md:group-hover:opacity-100 transition"
+              className="left-2 h-11 w-11 sm:h-9 sm:w-9 border-ink/10 bg-paper/85 text-ink shadow-soft hover:bg-paper [&_svg]:size-5 md:opacity-0 md:group-hover:opacity-100 transition"
               onClick={(e) => e.stopPropagation()}
             />
             <CarouselNext
-              className="right-2 h-9 w-9 border-ink/10 bg-paper/85 text-ink shadow-soft hover:bg-paper [&_svg]:size-5 md:opacity-0 md:group-hover:opacity-100 transition"
+              className="right-2 h-11 w-11 sm:h-9 sm:w-9 border-ink/10 bg-paper/85 text-ink shadow-soft hover:bg-paper [&_svg]:size-5 md:opacity-0 md:group-hover:opacity-100 transition"
               onClick={(e) => e.stopPropagation()}
             />
           </>

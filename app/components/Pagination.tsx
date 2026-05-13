@@ -62,7 +62,7 @@ function PageChip({
   href: string;
 }) {
   const base =
-    "min-w-[36px] h-9 px-2 inline-flex items-center justify-center rounded-full text-sm font-mono transition";
+    "min-w-[44px] h-11 sm:min-w-[36px] sm:h-9 px-2 inline-flex items-center justify-center rounded-full text-sm font-mono transition";
   if (active) {
     return (
       <span className={`${base} bg-ink text-bone`}>{page}</span>
@@ -78,7 +78,7 @@ function PageChip({
 function ArrowLink({ href, dir }: { href: string | null; dir: "prev" | "next" }) {
   const Icon = dir === "prev" ? ChevronLeft : ChevronRight;
   const base =
-    "h-9 w-9 inline-flex items-center justify-center rounded-full border transition";
+    "h-11 w-11 sm:h-9 sm:w-9 inline-flex items-center justify-center rounded-full border transition";
   if (!href) {
     return (
       <span className={`${base} border-ink/5 text-ink-muted-2 cursor-not-allowed`}>
