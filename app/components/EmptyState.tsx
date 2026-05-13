@@ -4,7 +4,7 @@ export function EmptyState({ filtered }: { filtered?: boolean }) {
       <div className="text-center py-24">
         <p className="font-display text-2xl">No listings match these filters</p>
         <p className="text-sm text-ink-muted mt-2 max-w-xs mx-auto">
-          Try clearing the make or model and search again.
+          Try clearing the search or filters and try again.
         </p>
       </div>
     );

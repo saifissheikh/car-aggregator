@@ -1,30 +1,19 @@
+import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { SORT_OPTIONS, type SortValue } from "./components/sort-options";
 import { MakeFilter } from "./components/MakeFilter";
 import { ModelFilter } from "./components/ModelFilter";
 import { SortControl } from "./components/SortControl";
-import { Pagination } from "./components/Pagination";
-import { ListingCard } from "./components/ListingCard";
-import { EmptyState } from "./components/EmptyState";
+import { SearchInput } from "./components/SearchInput";
+import { ListingsSection } from "./components/ListingsSection";
+import { ListingsSkeleton } from "./components/ListingsSkeleton";
 import { ModeToggle } from "@/components/mode-toggle";
 import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const PER_PAGE = 5;
-
-// "Newest" sorts by sourceUpdatedAt — for QS this is the real createdAt; for QL
-// it's either styleGenerated (rare, only promoted ads) or a synthesized batch
-// timestamp written by the scraper that preserves API-side recency ordering.
-const SORT_TO_ORDER: Record<SortValue, Prisma.ListingOrderByWithRelationInput[]> = {
-  newest: [{ sourceUpdatedAt: { sort: "desc", nulls: "last" } }, { sourceAdIdNum: { sort: "desc", nulls: "last" } }],
-  oldest: [{ sourceUpdatedAt: { sort: "asc", nulls: "last" } }, { sourceAdIdNum: { sort: "asc", nulls: "last" } }],
-  price_asc: [{ priceQAR: { sort: "asc", nulls: "last" } }],
-  price_desc: [{ priceQAR: { sort: "desc", nulls: "last" } }],
-  mileage_asc: [{ mileageKM: { sort: "asc", nulls: "last" } }],
-  year_desc: [{ year: { sort: "desc", nulls: "last" } }],
-};
+const PER_PAGE = 10;
 
 function isSortValue(v: string | undefined): v is SortValue {
   return !!v && SORT_OPTIONS.some((o) => o.value === v);
@@ -33,29 +22,49 @@ function isSortValue(v: string | undefined): v is SortValue {
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; sort?: string; make?: string; model?: string }>;
+  searchParams: Promise<{ page?: string; sort?: string; make?: string; model?: string; q?: string }>;
 }) {
   const sp = await searchParams;
   const sort: SortValue = isSortValue(sp.sort) ? sp.sort : "newest";
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
   const make = sp.make?.trim() || null;
   const model = sp.model?.trim() || null;
+  const q = sp.q?.trim() || null;
+
+  // Free-text search across the fields most useful for finding a car: make, model,
+  // trim, title (often holds variant + descriptor), body type, exterior color, fuel,
+  // location, dealer name, and the descriptive blob. Year is matched too if the
+  // query parses as a 4-digit number.
+  const qYear = q && /^\d{4}$/.test(q) ? parseInt(q, 10) : null;
+  const searchFilter: Prisma.ListingWhereInput | null = q
+    ? {
+        OR: [
+          { title: { contains: q, mode: "insensitive" } },
+          { make: { contains: q, mode: "insensitive" } },
+          { model: { contains: q, mode: "insensitive" } },
+          { trim: { contains: q, mode: "insensitive" } },
+          { bodyType: { contains: q, mode: "insensitive" } },
+          { exteriorColor: { contains: q, mode: "insensitive" } },
+          { fuelType: { contains: q, mode: "insensitive" } },
+          { location: { contains: q, mode: "insensitive" } },
+          { dealerName: { contains: q, mode: "insensitive" } },
+          { description: { contains: q, mode: "insensitive" } },
+          ...(qYear ? [{ year: qYear } as Prisma.ListingWhereInput] : []),
+        ],
+      }
+    : null;
 
   const where: Prisma.ListingWhereInput = {
     isActive: true,
     ...(make ? { make: { equals: make, mode: "insensitive" } } : {}),
     ...(model ? { model: { equals: model, mode: "insensitive" } } : {}),
+    ...(searchFilter ?? {}),
   };
 
-  const [total, totalAll, listings, makeRows, modelRows] = await Promise.all([
-    prisma.listing.count({ where }),
+  // These queries don't depend on the search/filter state, so they live outside
+  // the Suspense boundary — the filter bar stays stable while the listings reload.
+  const [totalAll, makeRows, modelRows] = await Promise.all([
     prisma.listing.count({ where: { isActive: true } }),
-    prisma.listing.findMany({
-      where,
-      orderBy: SORT_TO_ORDER[sort],
-      skip: (page - 1) * PER_PAGE,
-      take: PER_PAGE,
-    }),
     prisma.listing.findMany({
       where: { isActive: true, make: { not: null } },
       distinct: ["make"],
@@ -82,18 +91,20 @@ export default async function HomePage({
     .map((r) => r.model)
     .filter((m): m is string => !!m && m.trim().length > 0);
 
-  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
-  const safePage = Math.min(page, totalPages);
-
   const buildHref = (p: number) => {
-    const q = new URLSearchParams();
-    if (sort !== "newest") q.set("sort", sort);
-    if (make) q.set("make", make);
-    if (model) q.set("model", model);
-    if (p !== 1) q.set("page", String(p));
-    const s = q.toString();
+    const qs = new URLSearchParams();
+    if (sort !== "newest") qs.set("sort", sort);
+    if (make) qs.set("make", make);
+    if (model) qs.set("model", model);
+    if (q) qs.set("q", q);
+    if (p !== 1) qs.set("page", String(p));
+    const s = qs.toString();
     return s ? `/?${s}` : "/";
   };
+
+  // Suspense key forces the boundary to re-fire (and show the skeleton) whenever
+  // any filter changes, instead of holding the stale list during the server roundtrip.
+  const suspenseKey = `${q ?? ""}|${make ?? ""}|${model ?? ""}|${sort}|${page}`;
 
   return (
     <main className="min-h-screen grain">
@@ -123,15 +134,11 @@ export default async function HomePage({
         </header>
 
         <div className="sticky top-0 z-20 bg-bone/85 backdrop-blur-md border-y border-ink/10">
-          <div className="px-5 sm:px-8 lg:px-12 py-2.5 sm:py-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-            <p className="text-sm min-w-0 truncate">
-              <span className="font-display text-base mr-1">
-                {(safePage - 1) * PER_PAGE + 1}–
-                {Math.min(safePage * PER_PAGE, total)}
-              </span>
-              <span className="text-ink-muted">of {total}</span>
-            </p>
-            <div className="grid grid-cols-3 gap-2 sm:flex sm:items-stretch sm:gap-2 sm:w-auto">
+          <div className="px-5 sm:px-8 lg:px-12 py-2.5 sm:py-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3">
+            <div className="sm:flex-1 sm:max-w-md">
+              <SearchInput value={q} />
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:items-stretch sm:gap-2 sm:ml-auto">
               <MakeFilter value={make} makes={makes} />
               <ModelFilter value={model} models={models} disabled={models.length === 0} />
               <SortControl value={sort} />
@@ -139,19 +146,16 @@ export default async function HomePage({
           </div>
         </div>
 
-        <section className="px-5 sm:px-8 lg:px-12 py-6 sm:py-8">
-          {listings.length === 0 ? (
-            <EmptyState filtered={!!(make || model)} />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
-              {listings.map((l, i) => (
-                <ListingCard key={l.id} listing={l} index={i} />
-              ))}
-            </div>
-          )}
-
-          <Pagination page={safePage} totalPages={totalPages} buildHref={buildHref} />
-        </section>
+        <Suspense key={suspenseKey} fallback={<ListingsSkeleton perPage={PER_PAGE} />}>
+          <ListingsSection
+            where={where}
+            sort={sort}
+            page={page}
+            perPage={PER_PAGE}
+            filtered={!!(make || model || q)}
+            buildHref={buildHref}
+          />
+        </Suspense>
 
         <footer className="px-5 sm:px-8 lg:px-12 py-12 text-center border-t border-ink/10">
           <p className="label">End of feed</p>
